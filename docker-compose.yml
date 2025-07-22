@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   app:
@@ -14,7 +14,6 @@ services:
 
   db:
     image: mysql:8
-    container_name: Vota_Brasil
     restart: unless-stopped
     ports:
       - "3307:3306"
@@ -25,6 +24,7 @@ services:
       MYSQL_PASSWORD: laravel
     volumes:
       - dbdata:/var/lib/mysql
+
 
 volumes:
   dbdata:
