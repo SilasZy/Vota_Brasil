@@ -1,0 +1,30 @@
+
+
+services:
+  app:
+    build:
+      context: .
+    container_name: Vota_Brasil-app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_Vota_Brasil
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: laravel
+    volumes:
+      - dbdata:/var/lib/mysql
+
+
+volumes:
+  dbdata:
