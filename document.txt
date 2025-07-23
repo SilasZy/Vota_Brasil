@@ -1,0 +1,4 @@
+dia 23/07/25 
+Lógica de loading carregamento e processamento da api. 
+primeiro pego foto, nome, partido estado (no caso o estado é a siglaUf) e ações seja inserir ou detalhes
+// Possível erro que resolvi pesquisando no stackOverflow sobre versão do React/react-dom espero que tenha resolvido.

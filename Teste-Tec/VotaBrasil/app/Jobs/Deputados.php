@@ -16,7 +16,8 @@ class Deputados implements ShouldQueue
 
     public function __construct()
     {
-        //
+
+        
     }
 
   public function handle(): void
