@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import Header from "../components/header";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Deputado {
   id: number;
@@ -36,72 +38,108 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPartido, setSelectedPartido] = useState<string>("all");
+  const [selectedUf, setSelectedUf] = useState<string>("all");
+
+  const partidos = useMemo(() => {
+    const uniquePartidos = new Set(deputados.map(d => d.siglaPartido));
+    return Array.from(uniquePartidos).sort();
+  }, [deputados]);
+
+  const ufs = useMemo(() => {
+    const uniqueUfs = new Set(deputados.map(d => d.siglaUf));
+    return Array.from(uniqueUfs).sort();
+  }, [deputados]);
 
   useEffect(() => {
-  async function fetchDeputados() {
-    try {
-      setLoading(true);
-      let response;
+    async function fetchDeputados() {
+      try {
+        setLoading(true);
+        let response;
 
-   
-      if (searchTerm.trim() !== "") {
-        response = await axios.get("http://localhost:8080/deputados/pesquisar", {
-          params: { nome: searchTerm.trim() }
-        });
+        if (searchTerm.trim() !== "") {
+          response = await axios.get("http://localhost:8080/deputados/pesquisar", {
+            params: { nome: searchTerm.trim() }
+          });
 
-        console.log("Resultado da pesquisa:", response.data);
-        setDeputados(response.data);
-        setTotalPages(1); 
-      } else {
-     
-        response = await axios.get("http://localhost:8080/deputados", {
-          params: {
-            page: currentPage,
-            limit: 10
-          }
-        });
-
-        console.log("Dados da API paginada:", response.data);
-
-        if (response.data && Array.isArray(response.data.data.data)) {
-          setDeputados(response.data.data.data);
-          setTotalPages(response.data.data.last_page || 1);
+          console.log("Resultado da pesquisa:", response.data);
+          setDeputados(response.data);
+          setTotalPages(1); 
         } else {
-          throw new Error("Formato de dados inválido");
+          response = await axios.get("http://localhost:8080/deputados", {
+            params: {
+              page: currentPage,
+              limit: 10
+            }
+          });
+
+          console.log("Dados da API paginada:", response.data);
+
+          if (response.data && Array.isArray(response.data.data.data)) {
+            setDeputados(response.data.data.data);
+            setTotalPages(response.data.data.last_page || 1);
+          } else {
+            throw new Error("Formato de dados inválido");
+          }
         }
+      } catch (error) {
+        console.error("Erro ao buscar deputados:", error);
+        setError("Não foi possível carregar os deputados. Tente novamente mais tarde.");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Erro ao buscar deputados:", error);
-      setError("Não foi possível carregar os deputados. Tente novamente mais tarde.");
-    } finally {
-      setLoading(false);
     }
-  }
 
-  fetchDeputados();
-}, [currentPage, searchTerm]);
-
-
+    fetchDeputados();
+  }, [currentPage, searchTerm]);
 
   const filteredDeputados = useMemo(() => {
-    if (!searchTerm) return deputados;
+    let filtered = deputados;
     
-    const term = searchTerm.toLowerCase();
-    return deputados.filter(deputado => 
-      deputado.nome.toLowerCase().includes(term) ||
-      deputado.siglaPartido.toLowerCase().includes(term) ||
-      (deputado.siglaUf && deputado.siglaUf.toLowerCase().includes(term))
-    );
-  }, [deputados, searchTerm]);
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(deputado => 
+        deputado.nome.toLowerCase().includes(term) ||
+        deputado.siglaPartido.toLowerCase().includes(term) ||
+        (deputado.siglaUf && deputado.siglaUf.toLowerCase().includes(term))
+      );
+    }
+
+    if (selectedPartido !== "all") {
+      filtered = filtered.filter(deputado => 
+        deputado.siglaPartido === selectedPartido
+      );
+    }
+
+    if (selectedUf !== "all") {
+      filtered = filtered.filter(deputado => 
+        deputado.siglaUf === selectedUf
+      );
+    }
+
+    return filtered;
+  }, [deputados, searchTerm, selectedPartido, selectedUf]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>;
-  }
+  const handlePartidoChange = (value: string) => {
+    setSelectedPartido(value);
+    setCurrentPage(1);
+  };
 
+  const handleUfChange = (value: string) => {
+    setSelectedUf(value);
+    setCurrentPage(1);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedPartido("all");
+    setSelectedUf("all");
+    setCurrentPage(1);
+  };
 
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -141,22 +179,64 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4">
-      {/* Input de pesquisa */}
-      <div className="w-full max-w-md mx-auto">
-        <Input
-          type="text"
-          placeholder="Pesquisar por nome, partido ou sigla..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="w-full"
-        />
+      <Header />
+      
+      {/* Filtros */}
+      <div className="w-full max-w-6xl mx-auto px-4 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <Input
+            type="text"
+            placeholder="Pesquisar por nome, partido ou sigla..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="w-full md:w-1/3"
+          />
+          
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-2/3">
+            <Select onValueChange={handlePartidoChange} value={selectedPartido}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filtrar por partido" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os partidos</SelectItem>
+                {partidos.map((partido) => (
+                  <SelectItem key={partido} value={partido}>
+                    {partido}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select onValueChange={handleUfChange} value={selectedUf}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filtrar por estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os estados</SelectItem>
+                {ufs.map((uf) => (
+                  <SelectItem key={uf} value={uf}>
+                    {uf}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button 
+              variant="outline" 
+              onClick={resetFilters}
+              className="whitespace-nowrap"
+            >
+              Limpar filtros
+            </Button>
+          </div>
+        </div>
       </div>
 
       {loading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto px-4">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -229,7 +309,9 @@ export default function Dashboard() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                      {searchTerm ? "Nenhum deputado encontrado para sua pesquisa" : "Nenhum deputado encontrado"}
+                      {searchTerm || selectedPartido !== "all" || selectedUf !== "all" 
+                        ? "Nenhum deputado encontrado com os filtros aplicados" 
+                        : "Nenhum deputado encontrado"}
                     </td>
                   </tr>
                 )}
@@ -238,7 +320,7 @@ export default function Dashboard() {
           </div>
 
           {filteredDeputados.length > 0 && (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center pb-4">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>

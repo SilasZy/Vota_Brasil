@@ -116,10 +116,14 @@ public $countDeputados;
 
 
     }
-
+//procurar por partido
 public function countDeputados(): JsonResponse
 {
+
+
     $countDeputados = Deputado::count();
+
+
     return response()->json([
         'success' => true,
         'data' => $countDeputados

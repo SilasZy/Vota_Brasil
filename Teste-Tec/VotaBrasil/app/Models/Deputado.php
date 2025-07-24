@@ -8,6 +8,8 @@ class Deputado extends Model
 {
     protected $table = 'deputados';
 
+
+
     protected $fillable = [
         'id_api',
         'nome',
@@ -20,3 +22,4 @@ class Deputado extends Model
         'id_legislatura'
     ];
 }
+return $this->hasMany(DeputadoDespesa::class, 'deputado_id');
