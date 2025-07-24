@@ -1,8 +1,7 @@
 <?php
-
 return [
 
-    'paths' => ['api/*', 'deputados/*'],
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
 
@@ -19,3 +18,4 @@ return [
     'supports_credentials' => false,
 
 ];
+

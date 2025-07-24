@@ -6,7 +6,6 @@ type Deputados = {
     siglaUf: string;
     urlFoto: string;
     urlPartido: string;
-    
     url: string;
     email: string;
 }
