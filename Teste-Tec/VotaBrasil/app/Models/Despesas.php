@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Despesas extends Model
 {
-     protected $table = 'deputado_despesas';
+    protected $table = 'deputado_despesas';
 
     protected $fillable = [
         'deputado_id',
@@ -15,7 +16,7 @@ class Despesas extends Model
         'valor',
         'fornecedor',
         'cnpj_cpf',
-        'descricao', // Corrigi o nome do campo (estava 'descriaco')
+        'descricao',
         'ano',
         'mes',
         'url_documento',
@@ -24,9 +25,6 @@ class Despesas extends Model
         'id_legislatura'
     ];
 
-    /**
-     * Uma despesa pertence a um deputado.
-     */
     public function deputado(): BelongsTo
     {
         return $this->belongsTo(Deputado::class, 'deputado_id', 'id');

@@ -15,7 +15,7 @@ import axios from "axios";
 
 export async function getDeputados() {
   try {
-    const res = await axios.get(`http://localhost:8080/deputados`);
+    const res = await axios.get(`http://localhost:8080/api/deputados`);
     if (!res.data || !res.data.data) throw new Error('Nenhum dado retornado');
     
   return res.data;
@@ -28,7 +28,7 @@ export async function getDeputados() {
 
 export async function getCountDeputados() {
   try {
-    const res = await axios.get(`http://localhost:8080/deputados/count`);
+    const res = await axios.get(`http://localhost:8080/api/deputados/count`);
     if (!res.data || !res.data.data) throw new Error('Nenhum número de deputados retornado');
     return res.data.data; 
   } catch (error) {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Jobs\Deputados;
 use App\Models\Deputado;
+use Illuminate\Http\JsonResponse;
+
 class DeputadoJobController extends Controller
 {
 

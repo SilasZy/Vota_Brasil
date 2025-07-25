@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('url')->nullable();
             $table->string('urlFoto')->nullable();
             $table->string('uriPartido')->nullable();
-           $table->unsignedInteger('id_legislatura')->nullable();
+           $table->unsignedInteger('id_legislatura');
             $table->timestamps();
         });
     }

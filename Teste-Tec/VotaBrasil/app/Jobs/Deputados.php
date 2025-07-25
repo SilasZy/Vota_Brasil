@@ -47,7 +47,7 @@ class Deputados implements ShouldQueue
                         'urlFoto' => $deputado['urlFoto'],
                         'uriPartido' => $deputado['uriPartido'],
                         'email' => $deputado['email'] ?? null,
-                        'id_legislatura' => $this->legislaturaAtual ?? null
+                        'id_legislatura' => $deputado['idLegislatura'],
                     ]
                 );
             }

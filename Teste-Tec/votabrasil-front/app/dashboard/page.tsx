@@ -66,7 +66,7 @@ export default function Dashboard() {
           setDeputados(response.data);
           setTotalPages(1); 
         } else {
-          response = await axios.get("http://localhost:8080/deputados", {
+          response = await axios.get("http://localhost:8080/api/deputados", {
             params: {
               page: currentPage,
               limit: 10

@@ -2,28 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use App\Jobs\DespesasJob; // Note o uso correto do nome da classe
+use App\Jobs\DespesasJob;
+use Illuminate\Http\Request;
 
 class DespesasController extends Controller
 {
-    public function iniciarDespesas(): JsonResponse
+    public function processar(Request $request)
     {
-           try {
-        DespesasJob::dispatch();
+        $request->validate([
+            'deputado_id' => 'required|integer|exists:deputados,id'
+        ]);
+
+        DespesasJob::dispatch($request->deputado_id);
 
         return response()->json([
             'success' => true,
-            'message' => 'Fila de atualização de despesas iniciada com sucesso'
+            'message' => 'Job de importação de despesas disparado para o deputado '.$request->deputado_id,
+            'data' => [
+                'deputado_id' => $request->deputado_id,
+                'job' => DespesasJob::class
+            ]
         ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Erro ao iniciar a importação',
-            'error' => $e->getMessage()
-        ], 500);
     }
 }
-    }
-
