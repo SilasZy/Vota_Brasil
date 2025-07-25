@@ -12,31 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('deputado_despesas', function (Blueprint $table) {
-            $table->id();
-
-            $table->unsignedBigInteger('deputado_id'); // FK para deputados.id
-
-            $table->year('ano');
-            $table->unsignedBigInteger('mes');
-            $table->string('cnpjCpfFornecedor');
-            $table->unsignedBigInteger('codDocumento');
-            $table->unsignedBigInteger('codLote');
-            $table->unsignedBigInteger('codTipoDocumento');
-            $table->date('dataDocumento');
-            $table->string('nomeFornecedor');
-            $table->string('numDocumento');
-            $table->string('numRessarcimento')->nullable();
-            $table->unsignedBigInteger('parcela')->nullable();
-            $table->string('tipoDespesa');
-            $table->string('tipoDocumento');
-            $table->string('urlDocumento');
-            $table->double('valorDocumento', 10, 2);
-            $table->double('valorGlosa', 10, 2)->default(0);
-            $table->double('valorLiquido', 10, 2);
-
+           $table->id();
+            $table->unsignedBigInteger('deputado_id');
+            $table->string('tipo');
+            $table->date('data');
+            $table->decimal('valor', 10, 2);
+            $table->string('fornecedor')->nullable();
+            $table->string('cnpj_cpf', 20)->nullable();
+            $table->text('descricao')->nullable();
+            $table->integer('ano');
+            $table->integer('mes');
+            $table->string('url_documento')->nullable();
+            $table->string('cod_documento')->nullable();
+            $table->string('cod_lote')->nullable();
+            $table->unique(['cod_documento', 'deputado_id']); 
             $table->timestamps();
+    $table->unsignedBigInteger('id_legislatura')->nullable();
 
-            $table->foreign('deputado_id')->references('id')->on('deputados')->onDelete('cascade');
+     $table->foreign('deputado_id')->references('id')->on('deputados');
         });
     }
 

@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\Deputados;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Jobs\Deputados;
 use App\Models\Deputado;
-
 class DeputadoJobController extends Controller
 {
-
 
 public $countDeputados;
 
@@ -150,3 +147,4 @@ public function pesquisar(Request $request)
 }
 
 }
+
