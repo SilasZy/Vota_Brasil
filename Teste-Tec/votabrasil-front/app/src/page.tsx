@@ -10,7 +10,7 @@ export default function HomePage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const response = await axios.post('http://localhost:8080/api/deputados/sincronizar');
       if (response.status !== 200) {
         throw new Error('Erro ao Disparar a fila de deputados');
@@ -77,7 +77,7 @@ export default function HomePage() {
               disabled={isLoading}
               className={`w-full px-6 py-4 rounded-xl ${isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer`}
             >
-              {isLoading ? 'Carregando...' : 'Ver Deputados'}
+              {isLoading ? 'Iniciando...' : 'Ver Deputados'}
             </button>
           </div>
         </div>

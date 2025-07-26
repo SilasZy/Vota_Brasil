@@ -4,8 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DeputadoJobController;
 use App\Http\Controllers\DespesasController;
 // Customizadas (devem vir primeiro!)
-Route::post('/despesas/processar', [DespesasController::class, 'processar']);
+
 Route::post('/deputados/sincronizar', [DeputadoJobController::class, 'iniciarFila']);
+Route::post('/despesas/processar', [DespesasController::class, 'processar']);
 Route::get('/deputados/count', [DeputadoJobController::class, 'countDeputados']);
 Route::get('/deputados/pesquisar', [DeputadoJobController::class, 'pesquisar']);
 Route::get('/deputados/partidos', [DeputadoJobController::class, 'getPartidos']);
