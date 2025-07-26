@@ -6,23 +6,35 @@ import { useState } from "react";
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const response = await axios.post('http://localhost:8080/api/deputados/sincronizar');
-      if (response.status !== 200) {
-        throw new Error('Erro ao Disparar a fila de deputados');
-      }
-      const data = await response.data;
-      console.log(data);
-      window.location.href = '/dashboard';
-    } catch (error) {
-      console.error('Error:', error);
-      setIsLoading(false);
+
+
+async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+  e.preventDefault();
+
+  if (isLoading) return; // Evita múltiplos cliques
+
+  setIsLoading(true);
+
+  try {
+    const response = await axios.post('http://localhost:8080/api/deputados/sincronizar');
+
+    if (response.status !== 200) {
+      throw new Error('Erro ao disparar a fila de deputados');
     }
+
+    console.log("Sincronização concluída:", response.data);
+
+    // Aguarda só um pouco para UX (ex: mostrar spinner)
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1000);
+
+  } catch (error) {
+    console.error('Erro:', error);
+    alert('Erro ao sincronizar deputados. Tente novamente.');
+    setIsLoading(false); // Permite tentar de novo
   }
+}
 
   return (
     <div className="flex w-full min-h-screen justify-center items-center bg-[#f5f8fa] px-4">

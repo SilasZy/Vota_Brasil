@@ -7,6 +7,8 @@ use App\Http\Controllers\DespesasController;
 
 Route::post('/deputados/sincronizar', [DeputadoJobController::class, 'iniciarFila']);
 Route::post('/despesas/processar', [DespesasController::class, 'processar']);
+Route::get('/despesas/deputado/{id}', [DespesasController::class, 'porDeputado']);
+
 Route::get('/deputados/count', [DeputadoJobController::class, 'countDeputados']);
 Route::get('/deputados/pesquisar', [DeputadoJobController::class, 'pesquisar']);
 Route::get('/deputados/partidos', [DeputadoJobController::class, 'getPartidos']);

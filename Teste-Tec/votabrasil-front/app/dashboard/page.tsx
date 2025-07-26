@@ -15,6 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Header from "../components/header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Deputado, Despesa } from "../interface/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"; // Make sure this file exists at src/components/ui/dialog.tsx
 
 export default function Dashboard() {
   const [deputados, setDeputados] = useState<Deputado[]>([]);
@@ -27,6 +34,10 @@ export default function Dashboard() {
   const [selectedUf, setSelectedUf] = useState<string>("all");
   const [allPartidos, setAllPartidos] = useState<string[]>([]);
   const [allUfs, setAllUfs] = useState<string[]>([]);
+  const [despesas, setDespesas] = useState<Despesa[]>([]);
+  const [selectedDeputado, setSelectedDeputado] = useState<Deputado | null>(null);
+  const [loadingDespesas, setLoadingDespesas] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchFilterOptions() {
@@ -114,19 +125,54 @@ export default function Dashboard() {
   };
 
   const handleDetailsClick = async (deputadoId: number) => {
+    const deputado = deputados.find(dep => dep.id === deputadoId);
+    if (!deputado) return;
+
     try {
-      const response = await axios.post("http://localhost:8080/api/deputados/trigger-expenses", {
+      setLoadingDespesas(true);
+      setSelectedDeputado(deputado);
+      
+      // Primeiro processa as despesas
+      const processResponse = await axios.post("http://localhost:8080/api/despesas/processar", {
         deputado_id: deputadoId
       });
       
-      if (response.data.success) {
+      if (processResponse.data.success) {
         console.log(`Expenses job triggered for deputy ${deputadoId}`);
+        
+        // Depois busca as despesas processadas
+        const despesasResponse = await axios.get(`http://localhost:8080/api/despesas/deputado/${deputadoId}`);
+        
+        if (despesasResponse.data.success) {
+          setDespesas(despesasResponse.data.data);
+          setIsModalOpen(true); // Abre o modal após carregar as despesas
+        } else {
+          throw new Error("Falha ao buscar despesas");
+        }
       } else {
-        console.error("Failed to trigger expenses job:", response.data.message);
+        throw new Error("Falha ao processar despesas");
       }
     } catch (error) {
-      console.error("Error triggering expenses job:", error);
+      console.error("Erro ao buscar despesas:", error);
+      setError("Não foi possível carregar as despesas do deputado.");
+    } finally {
+      setLoadingDespesas(false);
     }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedDeputado(null);
+    setDespesas([]);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
   const LoadingSkeleton = () => (
@@ -284,8 +330,9 @@ export default function Dashboard() {
                           variant="outline" 
                           size="sm"
                           onClick={() => handleDetailsClick(deputado.id)}
+                          disabled={loadingDespesas}
                         >
-                          Detalhes
+                          {loadingDespesas && selectedDeputado?.id === deputado.id ? "Carregando..." : "Detalhes"}
                         </Button>
                         <a href={deputado.url} target="_blank" rel="noopener noreferrer">
                           <Button variant="outline" size="sm" className="ml-2">
@@ -307,6 +354,94 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Modal de despesas */}
+          <Dialog open={isModalOpen} onOpenChange={closeModal}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-4">
+                  <Image
+                    src={selectedDeputado?.urlFoto || ""}
+                    alt={selectedDeputado?.nome || ""}
+                    width={60}
+                    height={60}
+                    className="rounded-full"
+                    unoptimized
+                  />
+                  <div>
+                    <h2 className="text-xl font-bold">{selectedDeputado?.nome}</h2>
+                    <p className="text-sm text-gray-600">
+                      {selectedDeputado?.siglaPartido} / {selectedDeputado?.siglaUf}
+                    </p>
+                  </div>
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-4">Despesas</h3>
+                
+                {loadingDespesas ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full bg-gray-200" />
+                    ))}
+                  </div>
+                ) : despesas.length > 0 ? (
+                  <div className="space-y-4">
+                    {despesas.map((despesa) => (
+                      <div key={despesa.id} className="border rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="font-medium">Tipo:</p>
+                            <p>{despesa.tipo}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Data:</p>
+                            <p>{formatDate(despesa.data)}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Valor:</p>
+                            <p>{formatCurrency(despesa.valor)}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Fornecedor:</p>
+                            <p>{despesa.fornecedor || "Não informado"}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">CNPJ/CPF:</p>
+                            <p>{despesa.cnpj_cpf || "Não informado"}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Ano/Mês:</p>
+                            <p>{despesa.ano}/{despesa.mes.toString().padStart(2, '0')}</p>
+                          </div>
+                          <div className="md:col-span-2">
+                            <p className="font-medium">Descrição:</p>
+                            <p>{despesa.descricao || "Não informado"}</p>
+                          </div>
+                          {despesa.url_documento && (
+                            <div className="md:col-span-2">
+                              <p className="font-medium">Documento:</p>
+                              <a 
+                                href={despesa.url_documento} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                Acessar documento
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">Nenhuma despesa encontrada para este deputado.</p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {deputados.length > 0 && totalPages > 1 && (
             <div className="flex items-center justify-center pb-4">
@@ -373,4 +508,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

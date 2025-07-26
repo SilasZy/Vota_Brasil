@@ -8,6 +8,7 @@ use App\Models\Deputado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+
 class DespesasController extends Controller
 {
    public function processar(Request $request)
@@ -46,5 +47,33 @@ class DespesasController extends Controller
         'data' => $despesa
     ]);
 }
+
+public function index(): JsonResponse
+{
+    $despesas = Despesas::all();
+
+    if ($despesas->isEmpty()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Nenhuma despesa encontrada.',
+        ], 404);
+    }
+    return response()->json([
+        'success' => true,
+        'data' => $despesas
+    ]);
+
+
+}
+public function porDeputado($id)
+{
+    $despesas = Despesas::where('deputado_id', $id)->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $despesas,
+    ]);
+}
+
 
 }
