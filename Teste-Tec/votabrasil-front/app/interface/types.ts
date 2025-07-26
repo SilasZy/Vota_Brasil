@@ -24,7 +24,6 @@
   valor: number; // Embora a API envie como string, converta para number ao setar no estado
   fornecedor: string;
   cnpj_cpf: string;
-  descricao: string;
   ano: number;
   mes: number;
   url_documento: string;

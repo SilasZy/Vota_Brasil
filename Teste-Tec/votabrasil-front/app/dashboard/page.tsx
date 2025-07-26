@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"; // Make sure this file exists at src/components/ui/dialog.tsx
+} from "@/components/ui/dialog"; 
+import { FaFileInvoiceDollar } from 'react-icons/fa';
+import { FileSearch, FileText } from "lucide-react";
 
 export default function Dashboard() {
   const [deputados, setDeputados] = useState<Deputado[]>([]);
@@ -144,7 +147,7 @@ export default function Dashboard() {
         
         if (despesasResponse.data.success) {
           setDespesas(despesasResponse.data.data);
-          setIsModalOpen(true); // Abre o modal após carregar as despesas
+          setIsModalOpen(true); // Abre o modal após carregar as despesas tal qual minha função original
         } else {
           throw new Error("Falha ao buscar despesas");
         }
@@ -290,8 +293,8 @@ export default function Dashboard() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
+                  <th scope="col" className="px-12 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Gerenciar
                   </th>
                 </tr>
               </thead>
@@ -325,19 +328,27 @@ export default function Dashboard() {
                         <div className="text-sm text-gray-500">{deputado.siglaUf}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDetailsClick(deputado.id)}
-                          disabled={loadingDespesas}
-                        >
-                          {loadingDespesas && selectedDeputado?.id === deputado.id ? "Carregando..." : "Detalhes"}
-                        </Button>
-                        <a href={deputado.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm" className="ml-2">
-                            Ver XML
-                          </Button>
-                        </a>
+                    <Button 
+  className="ml-2 cursor-pointer"
+  variant="outline" 
+  size="sm"
+  onClick={() => handleDetailsClick(deputado.id)}
+  disabled={loadingDespesas}
+>
+  {loadingDespesas && selectedDeputado?.id === deputado.id ? (
+    "Carregando..."
+  ) : (
+    <>
+      <FaFileInvoiceDollar className="w-4 h-4 mr-2" />
+      Despesas
+    </>
+  )}
+</Button>
+                        
+
+                        
+
+
                       </td>
                     </tr>
                   ))
@@ -354,93 +365,123 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {/* Modal de despesas */}
-          <Dialog open={isModalOpen} onOpenChange={closeModal}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-4">
-                  <Image
-                    src={selectedDeputado?.urlFoto || ""}
-                    alt={selectedDeputado?.nome || ""}
-                    width={60}
-                    height={60}
-                    className="rounded-full"
-                    unoptimized
-                  />
+          {loading && (
+            <div className="flex justify-center py-4">
+              <Skeleton className="h-10 w-64" />
+            </div>
+          )}
+ <Dialog open={isModalOpen} onOpenChange={closeModal}>
+  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle className="flex items-center gap-4">
+        <div className="relative w-16 h-16">
+          <Image
+            src={selectedDeputado?.urlFoto || "/placeholder.png"}
+            alt={selectedDeputado?.nome || "Deputado"}
+            fill
+            className="rounded-full object-cover border-2 border-primary"
+            unoptimized
+          />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">{selectedDeputado?.nome}</h2>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="px-2 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+              {selectedDeputado?.siglaPartido}
+            </span>
+            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+              {selectedDeputado?.siglaUf}
+            </span>
+          </div>
+        </div>
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold text-gray-800">Despesas</h3>
+        {despesas.length > 0 && !loadingDespesas && (
+          <span className="text-sm text-gray-500">
+            Total: {despesas.length} registros
+          </span>
+        )}
+      </div>
+      
+      {loadingDespesas ? (
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-lg bg-gray-100" />
+          ))}
+        </div>
+      ) : despesas.length > 0 ? (
+        <div className="space-y-4">
+          {despesas.map((despesa) => (
+            <div key={despesa.id} className="border rounded-lg p-5 hover:shadow-sm transition-shadow">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
                   <div>
-                    <h2 className="text-xl font-bold">{selectedDeputado?.nome}</h2>
-                    <p className="text-sm text-gray-600">
-                      {selectedDeputado?.siglaPartido} / {selectedDeputado?.siglaUf}
+                    <p className="text-sm font-medium text-gray-500">Tipo</p>
+                    <p className="font-medium">{despesa.tipo}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Fornecedor</p>
+                    <p>{despesa.fornecedor || "Não informado"}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Data</p>
+                    <p>{formatDate(despesa.data)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">CNPJ/CPF</p>
+                    <p>{despesa.cnpj_cpf || "Não informado"}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Valor</p>
+                    <p className="text-lg font-bold text-primary">
+                      {formatCurrency(despesa.valor )}
                     </p>
                   </div>
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-4">Despesas</h3>
-                
-                {loadingDespesas ? (
-                  <div className="space-y-2">
-                    {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-16 w-full bg-gray-200" />
-                    ))}
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Período</p>
+                    <p>{despesa.ano}/{despesa.mes.toString().padStart(2, '0')}</p>
                   </div>
-                ) : despesas.length > 0 ? (
-                  <div className="space-y-4">
-                    {despesas.map((despesa) => (
-                      <div key={despesa.id} className="border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="font-medium">Tipo:</p>
-                            <p>{despesa.tipo}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">Data:</p>
-                            <p>{formatDate(despesa.data)}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">Valor:</p>
-                            <p>{formatCurrency(despesa.valor)}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">Fornecedor:</p>
-                            <p>{despesa.fornecedor || "Não informado"}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">CNPJ/CPF:</p>
-                            <p>{despesa.cnpj_cpf || "Não informado"}</p>
-                          </div>
-                          <div>
-                            <p className="font-medium">Ano/Mês:</p>
-                            <p>{despesa.ano}/{despesa.mes.toString().padStart(2, '0')}</p>
-                          </div>
-                          <div className="md:col-span-2">
-                            <p className="font-medium">Descrição:</p>
-                            <p>{despesa.descricao || "Não informado"}</p>
-                          </div>
-                          {despesa.url_documento && (
-                            <div className="md:col-span-2">
-                              <p className="font-medium">Documento:</p>
-                              <a 
-                                href={despesa.url_documento} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:underline"
-                              >
-                                Acessar documento
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">Nenhuma despesa encontrada para este deputado.</p>
-                )}
+                </div>
               </div>
-            </DialogContent>
-          </Dialog>
+              
+              {despesa.url_documento && (
+                <div className="mt-4 pt-4 border-t">
+                  <a 
+                    href={despesa.url_documento} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Acessar documento comprobatório
+                  </a>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12">
+          <FileSearch className="w-12 h-12 text-gray-300 mb-4" />
+          <p className="text-gray-500 text-lg">Nenhuma despesa encontrada</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Não há registros de despesas para este deputado no período
+          </p>
+        </div>
+      )}
+    </div>
+  </DialogContent>
+</Dialog>
 
           {deputados.length > 0 && totalPages > 1 && (
             <div className="flex items-center justify-center pb-4">
