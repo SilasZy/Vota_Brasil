@@ -16,9 +16,6 @@ import Image from "next/image";
 import Header from "../components/header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-
-
-
 export default function Dashboard() {
   const [deputados, setDeputados] = useState<Deputado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +50,6 @@ export default function Dashboard() {
     fetchFilterOptions();
   }, []);
 
-  
   useEffect(() => {
     async function fetchDeputados() {
       try {
@@ -117,23 +113,21 @@ export default function Dashboard() {
     setCurrentPage(1);
   };
 
-const handleDetailsClick = async (deputadoId: number) => {
-  try {
-    const response = await axios.post("http://localhost:8080/api/deputados/trigger-expenses", {
-      deputado_id: deputadoId
-    });
-    
-    if (response.data.success) {
-      // You can add a toast notification here if you want
-      console.log(`Expenses job triggered for deputy ${deputadoId}`);
-    } else {
-      console.error("Failed to trigger expenses job:", response.data.message);
+  const handleDetailsClick = async (deputadoId: number) => {
+    try {
+      const response = await axios.post("http://localhost:8080/api/deputados/trigger-expenses", {
+        deputado_id: deputadoId
+      });
+      
+      if (response.data.success) {
+        console.log(`Expenses job triggered for deputy ${deputadoId}`);
+      } else {
+        console.error("Failed to trigger expenses job:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error triggering expenses job:", error);
     }
-  } catch (error) {
-    console.error("Error triggering expenses job:", error);
-  }
-};
-
+  };
 
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -171,15 +165,9 @@ const handleDetailsClick = async (deputadoId: number) => {
     </div>
   );
 
-{error && (
-    <div className="text-red-500 text-center mt-4">
-      <p>{error}</p>
-    </div>
-  )}
   return (
     <div className="space-y-4">
       <Header />
-      
       
       <div className="w-full max-w-6xl mx-auto px-4 space-y-4">
         <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -231,6 +219,12 @@ const handleDetailsClick = async (deputadoId: number) => {
         </div>
       </div>
 
+      {error && (
+        <div className="text-red-500 text-center mt-4">
+          <p>{error}</p>
+        </div>
+      )}
+
       {loading ? (
         <LoadingSkeleton />
       ) : (
@@ -251,7 +245,6 @@ const handleDetailsClick = async (deputadoId: number) => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
-                  
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
@@ -288,14 +281,14 @@ const handleDetailsClick = async (deputadoId: number) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Button 
-  variant="outline" 
-  size="sm"
-  onClick={() => handleDetailsClick(deputado.id)}
->
-  Detalhes
-</Button>
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDetailsClick(deputado.id)}
+                        >
+                          Detalhes
+                        </Button>
                         <a href={deputado.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="ml-2">
                             Ver XML
                           </Button>
                         </a>
@@ -304,7 +297,7 @@ const handleDetailsClick = async (deputadoId: number) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                       {searchTerm || selectedPartido !== "all" || selectedUf !== "all" 
                         ? "Nenhum deputado encontrado com os filtros aplicados" 
                         : "Nenhum deputado encontrado"}
@@ -380,3 +373,4 @@ const handleDetailsClick = async (deputadoId: number) => {
     </div>
   );
 }
+
