@@ -26,6 +26,7 @@ import {
 import { FaFileInvoiceDollar } from 'react-icons/fa';
 import { FileSearch, FileText } from "lucide-react";
 
+
 export default function Dashboard() {
   const [deputados, setDeputados] = useState<Deputado[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,7 +141,7 @@ export default function Dashboard() {
       });
       
       if (processResponse.data.success) {
-        console.log(`Expenses job triggered for deputy ${deputadoId}`);
+        console.log(`Despesas processadas para deputado ${deputadoId}`);
         
       
         const despesasResponse = await axios.get(`http://localhost:8080/api/despesas/deputado/${deputadoId}`);
@@ -212,8 +213,9 @@ export default function Dashboard() {
       </div>
     </div>
   );
-
+ 
   return (
+
     <div className="space-y-4">
       <Header />
       
