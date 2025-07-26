@@ -11,7 +11,7 @@ export default function HomePage() {
 async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
   e.preventDefault();
 
-  if (isLoading) return; // Evita múltiplos cliques
+  if (isLoading) return; 
 
   setIsLoading(true);
 
@@ -24,7 +24,7 @@ async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
 
     console.log("Sincronização concluída:", response.data);
 
-    // Aguarda só um pouco para UX (ex: mostrar spinner)
+
     setTimeout(() => {
       window.location.href = '/dashboard';
     }, 1000);
@@ -32,7 +32,7 @@ async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
   } catch (error) {
     console.error('Erro:', error);
     alert('Erro ao sincronizar deputados. Tente novamente.');
-    setIsLoading(false); // Permite tentar de novo
+    setIsLoading(false); 
   }
 }
 
@@ -81,7 +81,6 @@ async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
           </div>
         </div>
 
-        {/* Botão */}
         <div className="flex flex-col gap-4">
           <div className="w-full">
             <button 
@@ -94,7 +93,7 @@ async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
           </div>
         </div>
 
-        {/* Rodapé */}
+
         <div className="text-center text-sm text-gray-400">
           <p>Dados oficiais da Câmara dos Deputados do Brasil</p>
         </div>

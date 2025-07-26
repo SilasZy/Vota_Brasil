@@ -131,8 +131,7 @@ export default function Dashboard() {
     try {
       setLoadingDespesas(true);
       setSelectedDeputado(deputado);
-      
-      // Primeiro processa as despesas
+    
       const processResponse = await axios.post("http://localhost:8080/api/despesas/processar", {
         deputado_id: deputadoId
       });
@@ -140,7 +139,7 @@ export default function Dashboard() {
       if (processResponse.data.success) {
         console.log(`Expenses job triggered for deputy ${deputadoId}`);
         
-        // Depois busca as despesas processadas
+      
         const despesasResponse = await axios.get(`http://localhost:8080/api/despesas/deputado/${deputadoId}`);
         
         if (despesasResponse.data.success) {
