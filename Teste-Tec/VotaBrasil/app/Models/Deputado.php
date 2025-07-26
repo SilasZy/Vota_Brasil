@@ -24,8 +24,9 @@ class Deputado extends Model
     /**
      * Um deputado tem muitas despesas.
      */
-    public function despesas(): HasMany
-    {
-        return $this->hasMany(DespesasDeputado::class, 'deputado_id', 'id');
-    }
+
+public function despesas()
+{
+    return $this->hasMany(Despesa::class, 'deputado_id', 'id');
+}
 }

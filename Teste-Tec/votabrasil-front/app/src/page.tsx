@@ -10,7 +10,7 @@ export default function HomePage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       const response = await axios.post('http://localhost:8080/api/deputados/sincronizar');
       if (response.status !== 200) {
         throw new Error('Erro ao Disparar a fila de deputados');
