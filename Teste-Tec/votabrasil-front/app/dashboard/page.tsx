@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,20 +16,8 @@ import Image from "next/image";
 import Header from "../components/header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Deputado {
-  id: number;
-  id_api: number;
-  nome: string;
-  siglaPartido: string;
-  siglaUf: string;
-  email: string;
-  url: string;
-  urlFoto: string;
-  uriPartido: string;
-  id_legislatura: number | null;
-  created_at: string;
-  updated_at: string;
-}
+
+
 
 export default function Dashboard() {
   const [deputados, setDeputados] = useState<Deputado[]>([]);
@@ -40,47 +28,61 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPartido, setSelectedPartido] = useState<string>("all");
   const [selectedUf, setSelectedUf] = useState<string>("all");
+  const [allPartidos, setAllPartidos] = useState<string[]>([]);
+  const [allUfs, setAllUfs] = useState<string[]>([]);
 
-  const partidos = useMemo(() => {
-    const uniquePartidos = new Set(deputados.map(d => d.siglaPartido));
-    return Array.from(uniquePartidos).sort();
-  }, [deputados]);
+  useEffect(() => {
+    async function fetchFilterOptions() {
+      try {
+        const [partidosRes, ufsRes] = await Promise.all([
+          axios.get("http://localhost:8080/api/deputados/partidos"),
+          axios.get("http://localhost:8080/api/deputados/ufs")
+        ]);
+        
+        if (partidosRes.data.success) {
+          setAllPartidos(partidosRes.data.data);
+        }
+        if (ufsRes.data.success) {
+          setAllUfs(ufsRes.data.data);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar opções:", error);
+      }
+    }
+    
+    fetchFilterOptions();
+  }, []);
 
-  const ufs = useMemo(() => {
-    const uniqueUfs = new Set(deputados.map(d => d.siglaUf));
-    return Array.from(uniqueUfs).sort();
-  }, [deputados]);
-
+  
   useEffect(() => {
     async function fetchDeputados() {
       try {
         setLoading(true);
         let response;
+        let params: any = {
+          page: currentPage,
+          per_page: 10
+        };
 
         if (searchTerm.trim() !== "") {
-          response = await axios.get("http://localhost:8080/deputados/pesquisar", {
-            params: { nome: searchTerm.trim() }
-          });
+          params.nome = searchTerm.trim();
+        }
+        if (selectedPartido !== "all") {
+          params.partido = selectedPartido;
+        }
+        if (selectedUf !== "all") {
+          params.uf = selectedUf;
+        }
 
-          console.log("Resultado da pesquisa:", response.data);
-          setDeputados(response.data);
-          setTotalPages(1); 
+        response = await axios.get("http://localhost:8080/api/deputados/pesquisar", {
+          params: params
+        });
+
+        if (response.data.success) {
+          setDeputados(response.data.data);
+          setTotalPages(response.data.meta?.last_page || 1);
         } else {
-          response = await axios.get("http://localhost:8080/api/deputados", {
-            params: {
-              page: currentPage,
-              limit: 10
-            }
-          });
-
-          console.log("Dados da API paginada:", response.data);
-
-          if (response.data && Array.isArray(response.data.data.data)) {
-            setDeputados(response.data.data.data);
-            setTotalPages(response.data.data.last_page || 1);
-          } else {
-            throw new Error("Formato de dados inválido");
-          }
+          throw new Error("Formato de dados inválido");
         }
       } catch (error) {
         console.error("Erro ao buscar deputados:", error);
@@ -91,37 +93,11 @@ export default function Dashboard() {
     }
 
     fetchDeputados();
-  }, [currentPage, searchTerm]);
-
-  const filteredDeputados = useMemo(() => {
-    let filtered = deputados;
-    
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(deputado => 
-        deputado.nome.toLowerCase().includes(term) ||
-        deputado.siglaPartido.toLowerCase().includes(term) ||
-        (deputado.siglaUf && deputado.siglaUf.toLowerCase().includes(term))
-      );
-    }
-
-    if (selectedPartido !== "all") {
-      filtered = filtered.filter(deputado => 
-        deputado.siglaPartido === selectedPartido
-      );
-    }
-
-    if (selectedUf !== "all") {
-      filtered = filtered.filter(deputado => 
-        deputado.siglaUf === selectedUf
-      );
-    }
-
-    return filtered;
-  }, [deputados, searchTerm, selectedPartido, selectedUf]);
+  }, [currentPage, searchTerm, selectedPartido, selectedUf]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
   const handlePartidoChange = (value: string) => {
@@ -140,6 +116,24 @@ export default function Dashboard() {
     setSelectedUf("all");
     setCurrentPage(1);
   };
+
+const handleDetailsClick = async (deputadoId: number) => {
+  try {
+    const response = await axios.post("http://localhost:8080/api/deputados/trigger-expenses", {
+      deputado_id: deputadoId
+    });
+    
+    if (response.data.success) {
+      // You can add a toast notification here if you want
+      console.log(`Expenses job triggered for deputy ${deputadoId}`);
+    } else {
+      console.error("Failed to trigger expenses job:", response.data.message);
+    }
+  } catch (error) {
+    console.error("Error triggering expenses job:", error);
+  }
+};
+
 
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -177,11 +171,16 @@ export default function Dashboard() {
     </div>
   );
 
+{error && (
+    <div className="text-red-500 text-center mt-4">
+      <p>{error}</p>
+    </div>
+  )}
   return (
     <div className="space-y-4">
       <Header />
       
-      {/* Filtros */}
+      
       <div className="w-full max-w-6xl mx-auto px-4 space-y-4">
         <div className="flex flex-col md:flex-row gap-4 items-center">
           <Input
@@ -199,7 +198,7 @@ export default function Dashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os partidos</SelectItem>
-                {partidos.map((partido) => (
+                {allPartidos.map((partido) => (
                   <SelectItem key={partido} value={partido}>
                     {partido}
                   </SelectItem>
@@ -213,7 +212,7 @@ export default function Dashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os estados</SelectItem>
-                {ufs.map((uf) => (
+                {allUfs.map((uf) => (
                   <SelectItem key={uf} value={uf}>
                     {uf}
                   </SelectItem>
@@ -252,17 +251,15 @@ export default function Dashboard() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
+                  
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredDeputados.length > 0 ? (
-                  filteredDeputados.map((deputado) => (
+                {deputados.length > 0 ? (
+                  deputados.map((deputado) => (
                     <tr key={deputado.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -290,17 +287,16 @@ export default function Dashboard() {
                         <div className="text-sm text-gray-500">{deputado.siglaUf}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <a href={`mailto:${deputado.email}`} className="text-sm text-blue-500 hover:underline">
-                          {deputado.email}
-                        </a>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                        <Button variant="outline" size="sm">
-                          Detalhes
-                        </Button>
+                        <Button 
+  variant="outline" 
+  size="sm"
+  onClick={() => handleDetailsClick(deputado.id)}
+>
+  Detalhes
+</Button>
                         <a href={deputado.url} target="_blank" rel="noopener noreferrer">
                           <Button variant="outline" size="sm">
-                            API
+                            Ver XML
                           </Button>
                         </a>
                       </td>
@@ -319,7 +315,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {filteredDeputados.length > 0 && (
+          {deputados.length > 0 && totalPages > 1 && (
             <div className="flex items-center justify-center pb-4">
               <Pagination>
                 <PaginationContent>
@@ -351,6 +347,7 @@ export default function Dashboard() {
                         <Button
                           variant={currentPage === pageNum ? "default" : "ghost"}
                           onClick={() => setCurrentPage(pageNum)}
+                          className="cursor-pointer"
                         >
                           {pageNum}
                         </Button>

@@ -1,6 +1,29 @@
-import Link from "next/link";
+'use client'
+import axios from "axios";
 
-export default function Inicial() {
+import { useState } from "react";
+
+export default function HomePage() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const response = await axios.post('http://localhost:8080/api/deputados/sincronizar');
+      if (response.status !== 200) {
+        throw new Error('Erro ao Disparar a fila de deputados');
+      }
+      const data = await response.data;
+      console.log(data);
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Error:', error);
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="flex w-full min-h-screen justify-center items-center bg-[#f5f8fa] px-4">
       <div className="flex flex-col gap-8 p-10 rounded-2xl bg-white border border-gray-200 shadow-md max-w-2xl w-full">
@@ -48,15 +71,16 @@ export default function Inicial() {
 
         {/* Botão */}
         <div className="flex flex-col gap-4">
-  <div className="w-full">
-  <Link href="/dashboard">
-    <button className="w-full px-6 py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer">
-      Ver Deputados 
-    </button>
-  </Link>
-</div>
-</div>
-
+          <div className="w-full">
+            <button 
+              onClick={handleClick}
+              disabled={isLoading}
+              className={`w-full px-6 py-4 rounded-xl ${isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer`}
+            >
+              {isLoading ? 'Carregando...' : 'Ver Deputados'}
+            </button>
+          </div>
+        </div>
 
         {/* Rodapé */}
         <div className="text-center text-sm text-gray-400">

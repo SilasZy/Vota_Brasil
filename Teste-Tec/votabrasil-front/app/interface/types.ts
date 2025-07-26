@@ -11,4 +11,6 @@ interface Deputado {
   id_legislatura: number | null;
   created_at: string;
   updated_at: string;
+
+  
 }

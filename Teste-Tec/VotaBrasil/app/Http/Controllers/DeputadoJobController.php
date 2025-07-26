@@ -131,22 +131,95 @@ public function countDeputados(): JsonResponse
 }
 
 
-public function pesquisar(Request $request)
+ public function pesquisar(Request $request)
+    {
+        $request->validate([
+            'nome' => 'nullable|string',
+            'partido' => 'nullable|string',
+            'uf' => 'nullable|string',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100'
+        ]);
+
+        $query = Deputado::query();
+
+        // Filtro por nome
+        if ($request->filled('nome')) {
+            $query->where('nome', 'like', '%' . $request->nome . '%');
+        }
+
+        // Filtro por partido
+        if ($request->filled('partido') && $request->partido !== 'all') {
+            $query->where('siglaPartido', $request->partido);
+        }
+
+        // Filtro por UF
+        if ($request->filled('uf') && $request->uf !== 'all') {
+            $query->where('siglaUf', $request->uf);
+        }
+
+        // Paginação
+        $perPage = $request->per_page ?? 10;
+        $deputados = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Deputados encontrados',
+            'data' => $deputados->items(),
+            'meta' => [
+                'current_page' => $deputados->currentPage(),
+                'last_page' => $deputados->lastPage(),
+                'per_page' => $deputados->perPage(),
+                'total' => $deputados->total(),
+            ]
+        ]);
+    }
+
+    // Métodos para obter opções de filtro
+  public function getPartidos(): JsonResponse
 {
-    $nome = $request->query('nome');
+    try {
+        $partidos = Deputado::distinct()
+            ->orderBy('siglaPartido')
+            ->pluck('siglaPartido')
+            ->toArray();
 
-    if (empty($nome)) {
-        return response()->json(['message' => 'O parâmetro "nome" é obrigatório'], 400);
-    }
-
-    $deputados = Deputado::where('nome', 'like', '%' . $nome . '%')->get();
-
-    if ($deputados->isNotEmpty()) {
-        return response()->json($deputados, 200);
-    } else {
-        return response()->json(['message' => 'Deputado não encontrado'], 404);
+        return response()->json([
+            'success' => true,
+            'data' => $partidos
+        ]);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao listar partidos',
+            'error' => $th->getMessage()
+        ], 500);
     }
 }
 
+public function getUfs(): JsonResponse
+{
+    try {
+        $ufs = Deputado::distinct()
+            ->orderBy('siglaUf')
+            ->pluck('siglaUf')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'data' => $ufs
+        ]);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao listar UFs',
+            'error' => $th->getMessage()
+        ], 500);
+    }
+} 
 }
+
+
+
+
 
