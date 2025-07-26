@@ -57,14 +57,28 @@ public $countDeputados;
         }
     }
 
-    public function store(Request $request): JsonResponse
-    {
-        $deputado = Deputado::create($request->all());
-        return response()->json([
-            'success' => true,
-            'data' => $deputado
-        ]);
-    }
+ public function store(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'id_api' => 'required|integer|unique:deputados,id_api',
+        'nome' => 'required|string',
+        'siglaPartido' => 'nullable|string',
+        'siglaUf' => 'nullable|string',
+        'email' => 'nullable|email',
+        'url' => 'nullable|url',
+        'urlFoto' => 'nullable|url',
+        'uriPartido' => 'nullable|url',
+        'id_legislatura' => 'required|integer',
+    ]);
+
+    $deputado = Deputado::create($validated);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Deputado cadastrado com sucesso.',
+        'data' => $deputado
+    ], 201);
+}
 
     public function show($id): JsonResponse
     {
@@ -216,7 +230,7 @@ public function getUfs(): JsonResponse
             'error' => $th->getMessage()
         ], 500);
     }
-} 
+}
 }
 
 
