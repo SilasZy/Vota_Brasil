@@ -1,7 +1,8 @@
 
 'use client';
 import { useEffect, useState } from "react";
-import { getCountDeputados } from "../apis/deputados";
+
+import axios from "axios";
 
 export default function Header() {
 const [count, setCount] = useState(0);
@@ -9,8 +10,11 @@ const [count, setCount] = useState(0);
 
     async function getCount() {
    try {
-    const res = await getCountDeputados();
-   setCount(res);
+    const res = await  axios.get(`http://localhost:8080/api/deputados/count`);
+    if (!res) {
+      throw new Error('Nenhum dado retornado');
+    }
+   setCount(res.data.data);
    } catch (error) {
     console.error(error, 'erro ao buscar Countagem de  Deputados');
     throw error;

@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
 
-import axios from "axios";
+
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import Header from "../components/header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Deputado, Despesa } from "../interface/types";
+
 import {
   Dialog,
   DialogContent,
@@ -25,158 +25,36 @@ import {
 } from "@/components/ui/dialog"; 
 import { FaFileInvoiceDollar } from 'react-icons/fa';
 import { FileSearch, FileText } from "lucide-react";
+import { useDeputados } from "../apis/deputados";
 
 
 export default function Dashboard() {
-  const [deputados, setDeputados] = useState<Deputado[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPartido, setSelectedPartido] = useState<string>("all");
-  const [selectedUf, setSelectedUf] = useState<string>("all");
-  const [allPartidos, setAllPartidos] = useState<string[]>([]);
-  const [allUfs, setAllUfs] = useState<string[]>([]);
-  const [despesas, setDespesas] = useState<Despesa[]>([]);
-  const [selectedDeputado, setSelectedDeputado] = useState<Deputado | null>(null);
-  const [loadingDespesas, setLoadingDespesas] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+   const {
+    deputados,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    searchTerm,
+    selectedPartido,
+    selectedUf,
+    allPartidos,
+    allUfs,
+    despesas,
+    selectedDeputado,
+    loadingDespesas,
+    isModalOpen,
+    setCurrentPage,
+    handleSearch,
+    handlePartidoChange,
+    handleUfChange,
+    resetFilters,
+    handleDetailsClick,
+    closeModal,
+    formatDate,
+    formatCurrency
+  } = useDeputados();
 
-  useEffect(() => {
-    async function fetchFilterOptions() {
-      try {
-        const [partidosRes, ufsRes] = await Promise.all([
-          axios.get("http://localhost:8080/api/deputados/partidos"),
-          axios.get("http://localhost:8080/api/deputados/ufs")
-        ]);
-        
-        if (partidosRes.data.success) {
-          setAllPartidos(partidosRes.data.data);
-        }
-        if (ufsRes.data.success) {
-          setAllUfs(ufsRes.data.data);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar opções:", error);
-      }
-    }
-    
-    fetchFilterOptions();
-  }, []);
-
-  useEffect(() => {
-    async function fetchDeputados() {
-      try {
-        setLoading(true);
-        let response;
-        let params: any = {
-          page: currentPage,
-          per_page: 10
-        };
-
-        if (searchTerm.trim() !== "") {
-          params.nome = searchTerm.trim();
-        }
-        if (selectedPartido !== "all") {
-          params.partido = selectedPartido;
-        }
-        if (selectedUf !== "all") {
-          params.uf = selectedUf;
-        }
-
-        response = await axios.get("http://localhost:8080/api/deputados/pesquisar", {
-          params: params
-        });
-
-        if (response.data.success) {
-          setDeputados(response.data.data);
-          setTotalPages(response.data.meta?.last_page || 1);
-        } else {
-          throw new Error("Formato de dados inválido");
-        }
-      } catch (error) {
-        console.error("Erro ao buscar deputados:", error);
-        setError("Não foi possível carregar os deputados. Tente novamente mais tarde.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDeputados();
-  }, [currentPage, searchTerm, selectedPartido, selectedUf]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePartidoChange = (value: string) => {
-    setSelectedPartido(value);
-    setCurrentPage(1);
-  };
-
-  const handleUfChange = (value: string) => {
-    setSelectedUf(value);
-    setCurrentPage(1);
-  };
-
-  const resetFilters = () => {
-    setSearchTerm("");
-    setSelectedPartido("all");
-    setSelectedUf("all");
-    setCurrentPage(1);
-  };
-
-  const handleDetailsClick = async (deputadoId: number) => {
-    const deputado = deputados.find(dep => dep.id === deputadoId);
-    if (!deputado) return;
-
-    try {
-      setLoadingDespesas(true);
-      setSelectedDeputado(deputado);
-    
-      const processResponse = await axios.post("http://localhost:8080/api/despesas/processar", {
-        deputado_id: deputadoId
-      });
-      
-      if (processResponse.data.success) {
-        console.log(`Despesas processadas para deputado ${deputadoId}`);
-        
-      
-        const despesasResponse = await axios.get(`http://localhost:8080/api/despesas/deputado/${deputadoId}`);
-        
-        if (despesasResponse.data.success) {
-          setDespesas(despesasResponse.data.data);
-          setIsModalOpen(true); // Abre o modal após carregar as despesas tal qual minha função original
-        } else {
-          throw new Error("Falha ao buscar despesas");
-        }
-      } else {
-        throw new Error("Falha ao processar despesas");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar despesas:", error);
-      setError("Não foi possível carregar as despesas do deputado.");
-    } finally {
-      setLoadingDespesas(false);
-    }
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedDeputado(null);
-    setDespesas([]);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-  };
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
 
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -550,3 +428,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
+
