@@ -21,24 +21,11 @@ WORKDIR /var/www/html
 # Copiar APENAS o backend (VotaBrasil)
 COPY Teste-Tec/VotaBrasil/ .
 
-# 🔽🔽🔽 SOLUÇÃO SEGURA - criar .env mesmo sem .env.example 🔽🔽🔽
-RUN if [ ! -f ".env" ]; then \
-        if [ -f ".env.example" ]; then \
-            cp .env.example .env; \
-        else \
-            touch .env; \
-            echo "APP_KEY=" >> .env; \
-        fi; \
-    fi
-
 # Instalar dependências
 RUN composer install --no-dev --optimize-autoloader
 
-# Gerar key apenas se não existir
-RUN if ! grep -q "APP_KEY=base64:" .env; then php artisan key:generate; fi
-
-RUN php artisan config:clear
-RUN php artisan cache:clear
+# 🔽🔽🔽 REMOVA OS COMANDOS ARTISAN PROBLEMÁTICOS 🔽🔽🔽
+# ⚠️ NÃO use php artisan aqui - faça via environment variables no Render
 
 # Configurar permissões
 RUN chown -R www-data:www-data /var/www/html \
