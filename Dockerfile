@@ -8,24 +8,23 @@ RUN apt-get update && apt-get install -y \
 # Ativar mod_rewrite no Apache
 RUN a2enmod rewrite
 
+# 🔽🔽🔽 CONFIGURAR APACHE DIRETAMENTE 🔽🔽🔽
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
+
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Criar diretório de trabalho
 WORKDIR /var/www/html
 
-# 🔽🔽🔽 MUDANÇA CRÍTICA AQUI 🔽🔽🔽
-# Copiar APENAS o backend (VotaBrasil) - NÃO copia frontend
+# Copiar APENAS o backend (VotaBrasil)
 COPY Teste-Tec/VotaBrasil/ .
 
-# Instalar dependências do Composer
-RUN if [ -f "composer.json" ]; then \
-    composer install --no-dev --optimize-autoloader; \
-    fi
+# Instalar dependências
+RUN composer install --no-dev --optimize-autoloader
 
 # Configurar permissões
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 storage bootstrap/cache
 
-# Expor porta 80
 EXPOSE 80
