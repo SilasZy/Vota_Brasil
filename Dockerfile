@@ -8,9 +8,10 @@ RUN apt-get update && apt-get install -y \
 # Ativar mod_rewrite no Apache
 RUN a2enmod rewrite
 
-# 🔽🔽🔽 CONFIGURAR APACHE DIRETAMENTE 🔽🔽🔽
+# Configurar Apache
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -22,6 +23,11 @@ COPY Teste-Tec/VotaBrasil/ .
 
 # Instalar dependências
 RUN composer install --no-dev --optimize-autoloader
+
+# 🔽🔽🔽 NOVOS COMANDOS CRÍTICOS 🔽🔽🔽
+RUN php artisan key:generate
+RUN php artisan config:clear
+RUN php artisan cache:clear
 
 # Configurar permissões
 RUN chown -R www-data:www-data /var/www/html \
