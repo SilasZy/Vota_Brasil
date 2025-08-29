@@ -21,10 +21,13 @@ WORKDIR /var/www/html
 # Copiar APENAS o backend (VotaBrasil)
 COPY Teste-Tec/VotaBrasil/ .
 
+# 🔽🔽🔽 PRIMEIRO CRIAR .env 🔽🔽🔽
+RUN cp .env.example .env
+
 # Instalar dependências
 RUN composer install --no-dev --optimize-autoloader
 
-# 🔽🔽🔽 NOVOS COMANDOS CRÍTICOS 🔽🔽🔽
+# 🔽🔽🔽 AGORA SIM GERAR A KEY 🔽🔽🔽
 RUN php artisan key:generate
 RUN php artisan config:clear
 RUN php artisan cache:clear
