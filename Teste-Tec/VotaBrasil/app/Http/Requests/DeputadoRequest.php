@@ -18,8 +18,8 @@ class DeputadoRequest extends FormRequest
             'partido' => 'required|string|max:50',
             'uf' => 'required|string|size:2',
             'email' => 'nullable|email|max:255',
-            'situacao' => 'required|in:ativo,licenca,afastado',
           
+
         ];
     }
 
