@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
 # Ativar mod_rewrite no Apache
 RUN a2enmod rewrite
 
-# Configurar Apache
+# 🔽🔽🔽 CONFIGURAÇÃO DIRETA NO APACHE 🔽🔽🔽
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
@@ -23,9 +23,6 @@ COPY Teste-Tec/VotaBrasil/ .
 
 # Instalar dependências
 RUN composer install --no-dev --optimize-autoloader
-
-# 🔽🔽🔽 REMOVA OS COMANDOS ARTISAN PROBLEMÁTICOS 🔽🔽🔽
-# ⚠️ NÃO use php artisan aqui - faça via environment variables no Render
 
 # Configurar permissões
 RUN chown -R www-data:www-data /var/www/html \
