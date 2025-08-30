@@ -20,22 +20,27 @@ RUN echo "<Directory /var/www/html/public>\n\
     && a2enconf laravel
 
 # Ajustes adicionais no Apache
-RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Definir diretório de trabalho
 WORKDIR /var/www/html
 
 # Copiar código Laravel
 COPY Teste-Tec/VotaBrasil/ /var/www/html
 
-# Instalar dependências Laravel
+# Instalar dependências do Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissões corretas
+# Configurar permissões corretas
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 storage bootstrap/cache
 
+# Expõe a porta 80 (Render detecta automaticamente)
 EXPOSE 80
+
+# Inicia o Apache no modo foreground (padrão do Render)
+CMD ["apache2-foreground"]
