@@ -8,8 +8,16 @@ RUN apt-get update && apt-get install -y \
 # Ativar mod_rewrite no Apache
 RUN a2enmod rewrite
 
-# Copiar arquivo de Virtual Host
-COPY vhost.conf /etc/apache2/sites-available/000-default.conf
+# Configurar Virtual Host diretamente no Apache
+RUN echo '<VirtualHost *:80>\n\
+    ServerAdmin webmaster@localhost\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -18,7 +26,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copiar código Laravel
-COPY Teste-Tec/VotaBrasil/ /var/www/html
+COPY . /var/www/html
 
 # Instalar dependências do Laravel
 RUN composer install --no-dev --optimize-autoloader
@@ -27,7 +35,5 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 storage bootstrap/cache
 
-# Expor porta 80
 EXPOSE 80
-
 CMD ["apache2-foreground"]

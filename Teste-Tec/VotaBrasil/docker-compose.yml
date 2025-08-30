@@ -1,10 +1,9 @@
-
+version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-    container_name: Vota_Brasil-app
+    build: .
+    container_name: vota_brasil_app
     ports:
       - "8080:80"
     volumes:
@@ -24,7 +23,6 @@ services:
       MYSQL_PASSWORD: laravel
     volumes:
       - dbdata:/var/lib/mysql
-
 
 volumes:
   dbdata:
