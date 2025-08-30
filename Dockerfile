@@ -29,7 +29,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copiar código Laravel
-COPY Teste-Tec/VotaBrasil/ .
+COPY Teste-Tec/VotaBrasil/ /var/www/html
 
 # Instalar dependências Laravel
 RUN composer install --no-dev --optimize-autoloader
