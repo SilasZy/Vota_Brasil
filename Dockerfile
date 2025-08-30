@@ -8,8 +8,18 @@ RUN apt-get update && apt-get install -y \
 # Ativar mod_rewrite no Apache
 RUN a2enmod rewrite
 
-# 🔽🔽🔽 CONFIGURAÇÃO DIRETA NO APACHE 🔽🔽🔽
+# Configurar DocumentRoot para public
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+
+# Permitir uso do .htaccess do Laravel
+RUN echo "<Directory /var/www/html/public>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>" > /etc/apache2/conf-available/laravel.conf \
+    && a2enconf laravel
+
+# Ajustes adicionais no Apache
 RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
@@ -18,13 +28,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar APENAS o backend (VotaBrasil)
+# Copiar código Laravel
 COPY Teste-Tec/VotaBrasil/ .
 
-# Instalar dependências
+# Instalar dependências Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Configurar permissões
+# Permissões corretas
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 storage bootstrap/cache
 
